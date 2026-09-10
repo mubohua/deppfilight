@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>航线三维回放 · Flight 3D</title>
+  <link rel="stylesheet" href="style.css" />
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+      }
+    }
+  </script>
+</head>
+<body>
+  <div id="view"></div>
+
+  <div id="panel" class="panel">
+    <div class="panel-head">
+      <span>航线文件</span>
+      <label class="btn-file">选择 CSV
+        <input id="fileInput" type="file" accept=".csv" multiple hidden />
+      </label>
+    </div>
+    <div id="loading" class="loading">可一次选择多个 CSV 进行对比（最多 8 个）</div>
+    <div id="fileList" class="file-list"></div>
+  </div>
+
+  <div id="hud" class="hud"></div>
+
+  <div id="bar" class="bar">
+    <button id="playBtn" class="btn">▶ 播放</button>
+    <input id="timeline" class="timeline" type="range" min="0" max="1000" value="0" step="1" />
+    <select id="speedSel" class="sel">
+      <option value="0.5">0.5×</option>
+      <option value="1" selected>1×</option>
+      <option value="2">2×</option>
+      <option value="4">4×</option>
+      <option value="8">8×</option>
+    </select>
+    <label class="lbl" title="飞机在场景中的显示放大系数">飞机
+      <input id="scaleRange" type="range" min="1" max="400" step="1" value="50" />
+      <span id="scaleVal">50×</span>
+    </label>
+    <label class="lbl" title="高度方向放大比例尺（仅影响显示）">垂直
+      <input id="vertRange" type="range" min="1" max="20" step="0.5" value="3" />
+      <span id="vertVal">3×</span>
+    </label>
+    <button id="followBtn" class="btn">跟随</button>
+    <select id="followSel" class="sel" title="选择跟随的飞机"></select>
+    <button id="resetBtn" class="btn">重置视角</button>
+  </div>
+
+  <div class="hintbar">左键旋转 · 右键(或中键)平移 · 滚轮缩放 · 空格播放/暂停 · 「跟随」= 机尾追尾镜头</div>
+
+  <script type="module" src="src/main.js"></script>
+</body>
+</html>
