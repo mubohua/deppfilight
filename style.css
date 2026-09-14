@@ -36,8 +36,12 @@ body { font-family: "Segoe UI", "Microsoft YaHei", system-ui, sans-serif; color:
   background: rgba(16, 22, 34, 0.86); border: 1px solid #223050;
   border-radius: 10px; padding: 10px 12px; font-size: 13px; z-index: 10;
 }
-.hud-title { font-weight: 600; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.hud-title .dot { width: 10px; height: 10px; border-radius: 50%; flex: 0 0 auto; }
+.hud-head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.hud-head .dot { width: 10px; height: 10px; border-radius: 50%; flex: 0 0 auto; }
+.hud-sel {
+  flex: 1; min-width: 0; background: #1a2438; color: #dbe3f0;
+  border: 1px solid #2b3d61; border-radius: 7px; padding: 5px 6px; font-size: 12px;
+}
 .hud-row { display: flex; justify-content: space-between; padding: 3px 0; border-bottom: 1px dashed #1d2942; }
 .hud-row span { color: #8ea0bd; }
 .hud-row.small { border: none; color: #5f708d; font-size: 11px; }

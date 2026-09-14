@@ -51,7 +51,6 @@ let currentSpeed = 1;
 // ---------- 加载 ----------
 const fileInput = document.getElementById('fileInput');
 const fileListEl = document.getElementById('fileList');
-const hudEl = document.getElementById('hud');
 const loadingEl = document.getElementById('loading');
 const timeline = document.getElementById('timeline');
 const playBtn = document.getElementById('playBtn');
@@ -66,6 +65,10 @@ const followSel = document.getElementById('followSel');
 const stepBack = document.getElementById('stepBack');
 const stepFwd = document.getElementById('stepFwd');
 const timeLbl = document.getElementById('timeLbl');
+const hudSel = document.getElementById('hudSel');
+const hudDot = document.getElementById('hudDot');
+const hudBody = document.getElementById('hudBody');
+let hudTraj = null; // HUD 显示的数据来源（与可见性、跟随对象独立）
 
 let modelScale = Number(scaleRange.value);
 let scaleInited = false;
@@ -121,6 +124,11 @@ followSel.addEventListener('change', () => {
     followTraj = trajectories[idx];
     if (followEnabled) snapChase();
   }
+});
+
+hudSel.addEventListener('change', () => {
+  const idx = Number(hudSel.value);
+  if (trajectories[idx]) { hudTraj = trajectories[idx]; updateHud(); }
 });
 
 // 稳定式追尾：只按航向把相机放在飞机正后方（忽略滚转），地平线保持水平
@@ -288,9 +296,15 @@ function addTrajectory(name, color, data, item) {
 
   const opt = document.createElement('option');
   opt.value = String(trajectories.length - 1);
-  opt.textContent = `${trajectories.length - 1 + 1}. ${name}`;
+  opt.textContent = `${trajectories.length}. ${name}`;
   followSel.appendChild(opt);
   if (!followTraj) followTraj = traj;
+
+  const hopt = document.createElement('option');
+  hopt.value = String(trajectories.length - 1);
+  hopt.textContent = name;
+  hudSel.appendChild(hopt);
+  if (!hudTraj) { hudTraj = traj; hudSel.value = String(trajectories.length - 1); }
 
   updateGroundAndFit();
   updateTimelineMax();
@@ -488,14 +502,18 @@ function lerp(a, b, f) { return a + (b - a) * f; }
 
 // ---------- HUD ----------
 function updateHud() {
-  const tr = trajectories.find((t) => t.visible);
-  if (!tr) { hudEl.innerHTML = '<div class="hint">加载 CSV 后显示飞行数据</div>'; return; }
+  const tr = hudTraj || trajectories.find((t) => t.visible) || trajectories[0];
+  if (!tr) {
+    hudDot.style.background = 'transparent';
+    hudBody.innerHTML = '<div class="hint">加载 CSV 后显示飞行数据</div>';
+    return;
+  }
+  hudDot.style.background = '#' + tr.color.toString(16).padStart(6, '0');
   const d = tr.data;
   const n = d.meta.count;
   const localMs = Math.min(timeSec * 1000, tr.duration);
   const i = findIndex(d.pt, localMs);
-  hudEl.innerHTML = `
-    <div class="hud-title"><span class="dot" style="background:#${tr.color.toString(16).padStart(6, '0')}"></span>${escapeHtml(tr.name)}</div>
+  hudBody.innerHTML = `
     <div class="hud-row"><span>时间</span><b>${(localMs / 1000).toFixed(2)} s</b></div>
     <div class="hud-row"><span>高度 AGL</span><b>${d.py[i].toFixed(1)} m</b></div>
     <div class="hud-row"><span>地速</span><b>${d.gs[i].toFixed(1)} m/s</b></div>
