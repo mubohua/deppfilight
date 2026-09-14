@@ -42,8 +42,8 @@ groundGroup.add(groundPlane);
 
 // ---------- 状态 ----------
 const trajectories = [];
-let maxDuration = 1;
-let progress = 0;          // 0..1
+let maxDuration = 1;       // 最长航线时长（毫秒）
+let timeSec = 0;           // 绝对时间（秒）
 let playing = false;
 let lastTime = 0;
 let currentSpeed = 1;
@@ -63,6 +63,9 @@ const vertRange = document.getElementById('vertRange');
 const vertVal = document.getElementById('vertVal');
 const followBtn = document.getElementById('followBtn');
 const followSel = document.getElementById('followSel');
+const stepBack = document.getElementById('stepBack');
+const stepFwd = document.getElementById('stepFwd');
+const timeLbl = document.getElementById('timeLbl');
 
 let modelScale = Number(scaleRange.value);
 let scaleInited = false;
@@ -82,14 +85,14 @@ scaleRange.addEventListener('input', () => {
   modelScale = Number(scaleRange.value);
   scaleVal.textContent = modelScale + '×';
   for (const tr of trajectories) tr.model.scale.setScalar(modelScale);
-  apply(progress);
+  apply(timeSec);
 });
 
 vertRange.addEventListener('input', () => {
   vertScale = Number(vertRange.value);
   vertVal.textContent = vertScale + '×';
   applyVertScale();
-  apply(progress);
+  apply(timeSec);
 });
 
 function applyVertScale() {
@@ -127,7 +130,7 @@ function chaseDesired(out) {
   const tr = followTraj;
   const p = tr.model.position;
   const d = tr.data;
-  const i = findIndex(d.pt, progress * tr.duration);
+  const i = findIndex(d.pt, Math.min(timeSec * 1000, tr.duration));
   const yaw = d.yaw[i]; // 已含 YAW_SIGN，弧度
   const fx = -Math.sin(yaw), fz = -Math.cos(yaw);
   const wing = AIRCRAFT.wing.span * modelScale;
@@ -291,7 +294,7 @@ function addTrajectory(name, color, data, item) {
 
   updateGroundAndFit();
   updateTimelineMax();
-  apply(progress);
+  apply(timeSec);
 
   // 文件列表交互
   if (item) {
@@ -366,22 +369,44 @@ addEventListener('keydown', (e) => {
   }
 });
 
-// ---------- 时间轴 ----------
+// ---------- 时间轴（绝对秒）----------
+function totalSec() { return maxDuration / 1000; }
+
+function updateTimeLabel() {
+  timeLbl.textContent = timeSec.toFixed(1) + ' / ' + totalSec().toFixed(1) + ' s';
+}
+
 function updateTimelineMax() {
-  // 时间轴统一用 0..1 归一化进度
-  timeline.value = String(Math.round(progress * 1000));
+  timeline.max = String(totalSec());
+  timeline.step = '0.1';
+  if (timeSec > totalSec()) timeSec = totalSec();
+  timeline.value = String(timeSec);
+  updateTimeLabel();
 }
 
 timeline.addEventListener('input', () => {
-  progress = Number(timeline.value) / 1000;
-  apply(progress);
+  timeSec = Number(timeline.value);
+  updateTimeLabel();
+  apply(timeSec);
 });
+
+// 秒级步进（-1s / +1s）
+function stepTime(d) {
+  playing = false;
+  playBtn.textContent = '▶ 播放';
+  timeSec = Math.min(totalSec(), Math.max(0, timeSec + d));
+  timeline.value = String(timeSec);
+  updateTimeLabel();
+  apply(timeSec);
+}
+stepBack.addEventListener('click', () => stepTime(-1));
+stepFwd.addEventListener('click', () => stepTime(1));
 
 playBtn.addEventListener('click', () => {
   playing = !playing;
   playBtn.textContent = playing ? '⏸ 暂停' : '▶ 播放';
   if (playing) {
-    if (progress >= 1) progress = 0;
+    if (timeSec >= totalSec()) timeSec = 0;
     lastTime = performance.now();
     requestAnimationFrame(tick);
   }
@@ -393,11 +418,11 @@ function tick(now) {
   if (!playing) return;
   const dt = (now - lastTime) / 1000;
   lastTime = now;
-  const secs = maxDuration / 1000;
-  progress += (dt * currentSpeed) / secs;
-  if (progress >= 1) { progress = 1; playing = false; playBtn.textContent = '▶ 播放'; }
-  timeline.value = String(Math.round(progress * 1000));
-  apply(progress);
+  timeSec += dt * currentSpeed;
+  if (timeSec >= totalSec()) { timeSec = totalSec(); playing = false; playBtn.textContent = '▶ 播放'; }
+  timeline.value = String(timeSec);
+  updateTimeLabel();
+  apply(timeSec);
   if (playing) requestAnimationFrame(tick);
 }
 
@@ -416,12 +441,12 @@ const _q = new THREE.Quaternion();
 const _q1 = new THREE.Quaternion();
 const _q2 = new THREE.Quaternion();
 
-function apply(p) {
+function apply(tSec) {
   for (const tr of trajectories) {
     if (!tr.visible) continue;
     const d = tr.data;
     const n = d.meta.count;
-    const localMs = p * tr.duration;
+    const localMs = Math.min(tSec * 1000, tr.duration);
     const i0 = findIndex(d.pt, localMs);
     const i1 = Math.min(i0 + 1, n - 1);
     const t0 = d.pt[i0], t1 = d.pt[i1];
@@ -467,7 +492,7 @@ function updateHud() {
   if (!tr) { hudEl.innerHTML = '<div class="hint">加载 CSV 后显示飞行数据</div>'; return; }
   const d = tr.data;
   const n = d.meta.count;
-  const localMs = progress * tr.duration;
+  const localMs = Math.min(timeSec * 1000, tr.duration);
   const i = findIndex(d.pt, localMs);
   hudEl.innerHTML = `
     <div class="hud-title"><span class="dot" style="background:#${tr.color.toString(16).padStart(6, '0')}"></span>${escapeHtml(tr.name)}</div>

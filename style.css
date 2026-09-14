@@ -63,6 +63,7 @@ body { font-family: "Segoe UI", "Microsoft YaHei", system-ui, sans-serif; color:
 .lbl { display: flex; align-items: center; gap: 6px; color: #8ea0bd; font-size: 12px; white-space: nowrap; }
 .lbl input[type="range"] { width: 90px; accent-color: #2b6cff; }
 .lbl #scaleVal, .lbl #vertVal { width: 34px; color: #dbe3f0; font-variant-numeric: tabular-nums; }
+.time-lbl { color: #9fb0cc; font-size: 12px; min-width: 108px; text-align: center; font-variant-numeric: tabular-nums; }
 #followSel { max-width: 120px; }
 #followBtn.on { background: #2b6cff; border-color: #2b6cff; }
 .hintbar {

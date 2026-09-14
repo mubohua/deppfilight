@@ -32,7 +32,10 @@
 
   <div id="bar" class="bar">
     <button id="playBtn" class="btn">▶ 播放</button>
-    <input id="timeline" class="timeline" type="range" min="0" max="1000" value="0" step="1" />
+    <button id="stepBack" class="btn" title="后退 1 秒">⏪ 1s</button>
+    <button id="stepFwd" class="btn" title="前进 1 秒">1s ⏩</button>
+    <input id="timeline" class="timeline" type="range" min="0" max="1" value="0" step="0.1" />
+    <span id="timeLbl" class="time-lbl">0.0 / 0.0 s</span>
     <select id="speedSel" class="sel">
       <option value="0.5">0.5×</option>
       <option value="1" selected>1×</option>
